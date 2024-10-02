@@ -88,7 +88,14 @@
 </li>
  */
 
-export function parseQuestion(element: HTMLLIElement) {
+export type Question = {
+  qno: string;
+  question: string;
+  answers: string[];
+  imageSrcs: string[];
+};
+
+export function parseQuestion(element: HTMLLIElement): Partial<Question> {
   const qno = element.querySelector(".cvqs-qstn-weight")?.textContent?.trim();
 
   const question = element
@@ -97,7 +104,9 @@ export function parseQuestion(element: HTMLLIElement) {
 
   const answers = Array.from(
     element.querySelectorAll(".cvqs-answer-multiplechoice-choiceitem"),
-  ).map((choice) => choice.textContent?.trim());
+  )
+    .map((choice) => choice.textContent?.trim())
+    .filter(Boolean) as string[];
 
   const imageSrcs = Array.from(element.querySelectorAll("img")).map(
     (img) => img.src,
@@ -109,4 +118,28 @@ export function parseQuestion(element: HTMLLIElement) {
     answers,
     imageSrcs,
   };
+}
+
+export function isQuestionOk(
+  question: Partial<Question>,
+  errorMsg: string[],
+): question is Question {
+  let passed = true;
+
+  if (question.qno === undefined) {
+    errorMsg.push("Question number is missing");
+    passed = false;
+  }
+
+  if (question.question === undefined) {
+    errorMsg.push(`Question #${question.qno}: Question is missing`);
+    passed = false;
+  }
+
+  if (question.answers === undefined || question.answers.length === 0) {
+    errorMsg.push(`Question #${question.qno}: Answers are missing`);
+    passed = false;
+  }
+
+  return passed;
 }

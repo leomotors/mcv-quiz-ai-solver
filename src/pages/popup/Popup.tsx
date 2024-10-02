@@ -2,26 +2,12 @@ import OpenAI from "openai";
 import { useEffect, useState } from "react";
 
 export default function Popup(): JSX.Element {
-  async function start() {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-
-    if (!tab || tab.id === undefined) {
-      throw new Error("Tab not found");
-    }
-
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      action: "start",
-    });
-
-    console.log({ response });
-  }
-
+  const [success, setSuccess] = useState("");
+  const [warning, setWarning] = useState("");
   const [error, setError] = useState("");
   const [modelList, setModelList] = useState<string[]>([]);
-  const [aiClient, setAiClient] = useState<OpenAI>();
+  const [, setAiClient] = useState<OpenAI>();
+  const [model, setModel] = useState<string>();
 
   async function createOpenAIClient() {
     const { apiKey } = await chrome.storage.local.get("apiKey");
@@ -39,6 +25,7 @@ export default function Popup(): JSX.Element {
     try {
       const mList = await client.models.list();
       setModelList(mList.data.map((m) => m.id));
+      setModel(mList.data[0].id);
 
       return client;
     } catch (e) {
@@ -53,18 +40,47 @@ export default function Popup(): JSX.Element {
       setAiClient(client);
     }
 
-    setError("init disabled to not rate limit lmao");
-    // init();
+    init();
   }, []);
 
-  return (
-    <div className="absolute bottom-0 left-0 right-0 top-0 flex h-full flex-col gap-4 bg-gray-800 p-3 text-center text-xl text-white">
-      <h1 className="text-3xl font-bold">MCV AI Quiz</h1>
+  async function start() {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
 
-      <p>Click button to start</p>
+    if (!tab || tab.id === undefined) {
+      setError("Tab not found");
+      throw new Error("Tab not found");
+    }
+
+    const response = await chrome.tabs.sendMessage(tab.id, {
+      action: "start",
+      model,
+    });
+
+    console.log({ response });
+
+    if (response.status === "error") {
+      setError(response.message);
+      return;
+    }
+
+    setSuccess(response.message);
+    setWarning(response.warning);
+  }
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 top-0 flex h-full flex-col gap-4 bg-gray-800 p-3 text-center text-lg text-white overflow-y-scroll">
+      <h1 className="text-2xl font-bold">MCV Quiz AI Solver</h1>
 
       <label htmlFor="model">Model:</label>
-      <select id="model" className="rounded-xl bg-gray-700 p-4">
+      <select
+        id="model"
+        className="rounded-xl bg-gray-700 p-4"
+        value={model}
+        onChange={(e) => setModel(e.target.value)}
+      >
         {modelList.map((model) => (
           <option key={model} value={model}>
             {model}
@@ -83,6 +99,8 @@ export default function Popup(): JSX.Element {
         Open Options
       </button>
 
+      {success && <p className="text-green-500">{success}</p>}
+      {warning && <p className="text-yellow-500">{warning}</p>}
       {error && <p className="text-red-500">{error}</p>}
     </div>
   );

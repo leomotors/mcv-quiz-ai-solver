@@ -1,7 +1,7 @@
 {
-  "name": "vite-web-extension",
+  "name": "mcv-quiz-ai-solver",
   "version": "1.0.0",
-  "description": "A simple chrome extension template with Vite, React, TypeScript and Tailwind CSS.",
+  "description": "Use GPT to solve your MCV Quiz/Exercise",
   "private": true,
   "scripts": {
     "build": "vite build",
