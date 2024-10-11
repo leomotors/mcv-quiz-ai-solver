@@ -8,6 +8,7 @@ export default function Popup(): JSX.Element {
   const [modelList, setModelList] = useState<string[]>([]);
   const [, setAiClient] = useState<OpenAI>();
   const [model, setModel] = useState<string>();
+  const [loading, setLoading] = useState(false);
 
   async function createOpenAIClient() {
     const { apiKey } = await chrome.storage.local.get("apiKey");
@@ -54,10 +55,14 @@ export default function Popup(): JSX.Element {
       throw new Error("Tab not found");
     }
 
+    setLoading(true);
+
     const response = await chrome.tabs.sendMessage(tab.id, {
       action: "start",
       model,
     });
+
+    setLoading(false);
 
     console.log({ response });
 
@@ -71,7 +76,7 @@ export default function Popup(): JSX.Element {
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 top-0 flex h-full flex-col gap-4 bg-gray-800 p-3 text-center text-lg text-white overflow-y-scroll">
+    <div className="absolute bottom-0 left-0 right-0 top-0 flex h-full flex-col gap-4 overflow-y-scroll bg-gray-800 p-3 text-center text-lg text-white">
       <h1 className="text-2xl font-bold">MCV Quiz AI Solver</h1>
 
       <label htmlFor="model">Model:</label>
@@ -88,7 +93,11 @@ export default function Popup(): JSX.Element {
         ))}
       </select>
 
-      <button onClick={start} className="rounded-xl bg-blue-300 p-4">
+      <button
+        onClick={start}
+        className="rounded-xl bg-blue-300 p-4 disabled:bg-gray-500 disabled:hover:cursor-not-allowed"
+        disabled={loading || !model}
+      >
         Start
       </button>
 

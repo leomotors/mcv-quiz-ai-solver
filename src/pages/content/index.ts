@@ -35,7 +35,7 @@ async function start(model: string) {
         {
           role: "system",
           content:
-            "You will be answering questions in multiple choice format. You will only the answer in the exact format as shown in the options. You cannot guess the answer, if you are unsure you must answer why you are unsure instead.",
+            "You will be answering questions in multiple choice format. You will only the answer in the exact format as shown in the options without any prefix or suffix. You cannot guess the answer, if you are unsure you must answer why you are unsure instead.",
         },
         {
           role: "user",
@@ -71,20 +71,43 @@ async function start(model: string) {
       (c) => c === choice.message.content?.trim(),
     );
 
+    console.log(`${question.question} = ${choice.message.content?.trim()}`);
+
     if (!answer) {
       warningMsg.push(
         `Question #${question.qno} [AI UNSURE]: AI answer ${choice.message.content} which is not found in the options`,
       );
+
+      continue;
     }
+
+    let foundAnswer = false;
+    let clicked = false;
 
     element
       .querySelectorAll(".cvqs-answer-multiplechoice-choiceitem")
       .forEach((choice) => {
         const choiceText = choice.textContent?.trim();
         if (choiceText === answer) {
-          choice.querySelector("input")?.click();
+          foundAnswer = true;
+          const targetInput = choice.querySelector("input");
+
+          if (targetInput) {
+            targetInput.click();
+            clicked = true;
+          }
         }
       });
+
+    if (!foundAnswer) {
+      warningMsg.push(
+        `Question #${question.qno} [UI ISSUE]: Could not find answer ${answer} in the options`,
+      );
+    } else if (!clicked) {
+      warningMsg.push(
+        `Question #${question.qno} [UI ISSUE]: Cannot click answer ${answer}`,
+      );
+    }
   }
 
   return {
@@ -111,10 +134,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const { totalPromptTokens, totalCompletionTokens, warningMsg } =
         await start(model);
 
+      const responseMessage = `Total Prompt Tokens: ${totalPromptTokens}, Total Completion Tokens: ${totalCompletionTokens}`;
+
+      const warningMessage = warningMsg.join("\n");
+
+      console.log(responseMessage);
+      if (warningMessage) console.warn(warningMessage);
+
       sendResponse({
         status: "success",
-        message: `Total Prompt Tokens: ${totalPromptTokens}, Total Completion Tokens: ${totalCompletionTokens}`,
-        warning: warningMsg.join("\n"),
+        message: responseMessage,
+        warning: warningMessage,
       });
     } catch (e) {
       console.error(e);

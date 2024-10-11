@@ -1,6 +1,6 @@
 {
   "name": "mcv-quiz-ai-solver",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Use GPT to solve your MCV Quiz/Exercise",
   "private": true,
   "scripts": {
