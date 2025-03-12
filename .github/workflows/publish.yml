@@ -1,0 +1,22 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - "*.*"
+
+jobs:
+  release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Publish Release
+        uses: leomotors/auto-publish-release@main
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          title: "MCV Quiz AI Solver"
+          tag: ${{ github.ref_name }}

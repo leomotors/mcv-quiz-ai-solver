@@ -17,7 +17,10 @@
   "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*", "<all_urls>"],
+      "matches": [
+        "https://www.mycourseville.com/*",
+        "https://alpha.mycourseville.com/*"
+      ],
       "js": ["src/pages/content/index.ts"]
     }
   ],
