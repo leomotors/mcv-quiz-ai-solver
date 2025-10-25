@@ -1,6 +1,12 @@
 import { isQuestionOk, parseQuestion, Question } from "./quizParser";
 import OpenAI from "openai";
 
+const apiPrices = {
+  "gpt-4.1": { input: 2, output: 8 },
+  "gpt-5": { input: 1.25, output: 10 },
+  "gpt-4o-mini": { input: 0.15, output: 0.6 },
+} as Record<string, { input: number; output: number }>;
+
 async function start(model: string) {
   const { apiKey } = await chrome.storage.local.get("apiKey");
 
@@ -134,7 +140,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const { totalPromptTokens, totalCompletionTokens, warningMsg } =
         await start(model);
 
-      const responseMessage = `Total Prompt Tokens: ${totalPromptTokens}, Total Completion Tokens: ${totalCompletionTokens}`;
+      let responseMessage = `Total Prompt Tokens: ${totalPromptTokens}, Total Completion Tokens: ${totalCompletionTokens}`;
+
+      const pricing = apiPrices[model];
+      if (pricing) {
+        const cost = (
+          (totalPromptTokens * pricing.input) / 1000000 +
+          (totalCompletionTokens * pricing.output) / 1000000
+        ).toFixed(6);
+        responseMessage += `, Estimated Cost: $${cost}`;
+      }
 
       const warningMessage = warningMsg.join("\n");
 

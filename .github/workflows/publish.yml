@@ -15,8 +15,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Publish Release
-        uses: leomotors/auto-publish-release@main
+        uses: leomotors/release-action@v6
         with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          title: "MCV Quiz AI Solver"
+          mode: release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
+          title: "MCV Quiz AI Solver"

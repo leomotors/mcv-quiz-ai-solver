@@ -25,8 +25,20 @@ export default function Popup(): JSX.Element {
 
     try {
       const mList = await client.models.list();
-      setModelList(mList.data.map((m) => m.id));
-      setModel(mList.data[0].id);
+      const preferedModels = ["gpt-4.1", "gpt-5", "gpt-4o-mini"];
+      const modelIds = mList.data.map((m) => m.id);
+      const prioritySorted = modelIds.sort((a, b) => {
+        const aIndex = preferedModels.indexOf(a);
+        const bIndex = preferedModels.indexOf(b);
+
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+
+        return aIndex - bIndex;
+      });
+      setModelList(prioritySorted);
+      setModel(prioritySorted[0]);
 
       return client;
     } catch (e) {
